@@ -1091,6 +1091,7 @@ new Bootstrap()
 ```
 
 可以看到，ChannelInboundHandlerAdapter 是按照 addLast 的顺序执行的，而 ChannelOutboundHandlerAdapter 是按照 addLast 的逆序执行的。ChannelPipeline 的实现是一个 ChannelHandlerContext（包装了 ChannelHandler） 组成的双向链表
+ChannelPipeline 是 ChannelHandler 的集合，它负责处理和拦截入站和出站的事件和操作，每个 Channel 都有一个 ChannelPipeline 与之对应，会自动创建。
 
 ![](img/0008.png)
 
