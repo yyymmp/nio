@@ -7,10 +7,15 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="chat-room" />
+        <module name="netty-demo" />
+        <module name="selfnetty" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="chat-room" target="7" />
+      <module name="netty-demo" target="1.8" />
+      <module name="netty-demo (1)" target="1.8" />
+      <module name="selfnetty" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

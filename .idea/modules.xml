@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/chat-room/chat-room.iml" filepath="$PROJECT_DIR$/chat-room/chat-room.iml" />
+      <module fileurl="file://$PROJECT_DIR$/netty-demo/netty-demo.iml" filepath="$PROJECT_DIR$/netty-demo/netty-demo.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/nio.iml" filepath="$PROJECT_DIR$/.idea/nio.iml" />
+      <module fileurl="file://$PROJECT_DIR$/selfnetty/selfnetty.iml" filepath="$PROJECT_DIR$/selfnetty/selfnetty.iml" />
     </modules>
   </component>
 </project>
