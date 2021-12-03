@@ -16,6 +16,29 @@ public class TestFilesCopy {
         String source = "img";
         String to = "img_bak";
 
+        Files.walkFileTree(Paths.get(source),new SimpleFileVisitor<Path>(){
+
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                //复制目录
+                String target = dir.toString().replace(source, to);
+                Files.createDirectory(Paths.get(target));
+                return super.preVisitDirectory(dir, attrs);
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                String target = file.toString().replace(source, to);
+                Files.copy(file,Paths.get(target));
+                return super.visitFile(file, attrs);
+            }
+        });
+    }
+
+    private static void m1() throws IOException {
+        String source = "img";
+        String to = "img_bak";
+
         Files.walk(Paths.get(source)).forEach(path -> {
             //复制文件只需要将前段路径改变
             String target = path.toString().replace(source, to);
