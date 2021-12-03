@@ -15,6 +15,48 @@ public class TestFilesWalkFileTree {
     //1.7前遍历文件树 只能递归  Files 7之后出现的工具类
 
     public static void main(String[] args) throws IOException {
+        Path path = Paths.get("E:\\nio\\deleteTest");
+        //无法删除非空目录
+        //Files.delete(path);
+        Files.walkFileTree(path,new SimpleFileVisitor<Path>(){
+            /**
+             * 进目录之前
+             * @param dir
+             * @param attrs
+             * @return
+             * @throws IOException
+             */
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                System.out.println("进入目录"+dir);
+                return super.preVisitDirectory(dir, attrs);
+            }
+
+            /**
+             * 进入文件
+             * @param file
+             * @param attrs
+             * @return
+             * @throws IOException
+             */
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                System.out.println("file = " + file.getFileName());
+                //进入文件时删除文件 退出时则可删除目录 因为目录已经为空
+                Files.delete(file);
+                return super.visitFile(file, attrs);
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                System.out.println("退出目录");;
+                Files.delete(dir);
+                return super.postVisitDirectory(dir, exc);
+            }
+        });
+    }
+
+    private static void m2() throws IOException {
         AtomicInteger fileCount = new AtomicInteger();
         //统计jar
         Files.walkFileTree(Paths.get("F:\\env\\java8"), new SimpleFileVisitor<Path>() {
