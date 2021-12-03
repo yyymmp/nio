@@ -693,7 +693,8 @@ while(buffer.hasRemaining()) {
 }
 ```
 
-在 while 中调用 channel.write 是因为 write 方法并不能保证一次将 buffer 中的内容全部写入 channel
+在 while 中调用 channel.write 是因为 write 方法并不能保证一次将 buffer 中的内容全部写入 channel,在 while 中调用 channel.write 是因为 write 方法并不能保证一次将 buffer 中的内容全部写入 channel,
+得写入能力有限得
 
 
 
