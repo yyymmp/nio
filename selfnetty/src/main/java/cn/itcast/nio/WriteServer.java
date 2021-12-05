@@ -39,18 +39,40 @@ public class WriteServer {
                     //ServerSocketChannel channel = (ServerSocketChannel) key.channel();
                     SocketChannel socketChannel = ssc.accept();
                     socketChannel.configureBlocking(false);
-                    //socketChannel.register(selector, SelectionKey.OP_ACCEPT);
+                    SelectionKey scKey = socketChannel.register(selector, 0, null);
+                    scKey.interestOps(SelectionKey.OP_READ);
 
                     //像客户端写入大量数据
                     StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < 3000000; i++) {
+                    for (int i = 0; i < 30000000; i++) {
                         sb.append("a");
                     }
                     ByteBuffer buffer = Charset.defaultCharset().encode(sb.toString());
+                    int write = socketChannel.write(buffer);
+                    System.out.println("实际写入字节数" + write);
                     //返回实际写入字节
-                    while (buffer.hasRemaining()) {
-                        int write = socketChannel.write(buffer);
-                        System.out.println("实际写入字节数" + write);
+                    if (buffer.hasRemaining()) {
+                        //关注可写事件
+                        scKey.interestOps(scKey.interestOps() + SelectionKey.OP_WRITE);
+                        //未写完的数据挂到scKey上
+                        scKey.attach(buffer);
+                    }
+
+                }
+                //发送缓冲区空出来 可以继续写入
+                else if (key.isWritable()) {
+                    ByteBuffer attachment = (ByteBuffer) key.attachment();
+                    SocketChannel channel = (SocketChannel) key.channel();
+
+                    //如果这轮写不完 下一次将会继续触发写事件
+                    int write = channel.write(attachment);
+                    System.out.println("写事件实际写入字节数" + write);
+
+                    if (!attachment.hasRemaining()) {
+                        //当附件数据已经写完了 那么就删除该附件
+                        key.attach(null);
+                        //取消这个事件
+                        key.interestOps(key.interestOps() - SelectionKey.OP_WRITE);
                     }
 
                 }
