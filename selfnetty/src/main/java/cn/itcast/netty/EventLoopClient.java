@@ -39,7 +39,7 @@ class EventLoopClient {
 
                 })
                 //connect:异步非阻塞 真正连接操作的是另外一个线程去做 -> nio线程  并且这个连接操作是比较慢的
-                .connect(new InetSocketAddress("127.0.0.1", 8082));
+                .connect(new InetSocketAddress("127.0.0.1", 8080));
         //sync的作用: 上方连接还没有建立,这里直接拿到channel,其实是一个连接建立前的channel,此时发消息根本发布到服务起
         //所以需要在此调用sync 阻塞当前线程 直到连接建立
         channelFuture.sync();
