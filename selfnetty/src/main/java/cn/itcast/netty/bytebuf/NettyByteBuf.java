@@ -17,6 +17,8 @@ class NettyByteBuf {
     public static void main(String[] args) {
         //netty中byteBuf可以自动动态扩容
         ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer();
+        //是否采用池化技术 class io.netty.buffer.PooledUnsafeDirectByteBuf  直接内存+池化技术 默认实现就是池化直接内存实现
+        System.out.println(byteBuf.getClass());
         log(byteBuf);
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 32; i++) {
@@ -27,7 +29,7 @@ class NettyByteBuf {
         log(byteBuf);
     }
 
-    private static void log(ByteBuf buffer) {
+    public static void log(ByteBuf buffer) {
         int length = buffer.readableBytes();
         int rows = length / 16 + (length % 15 == 0 ? 0 : 1) + 4;
         StringBuilder buf = new StringBuilder(rows * 80 * 2)
