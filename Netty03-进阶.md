@@ -270,7 +270,7 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
 
 #### 方法1，短链接
 
-以解决粘包为例
+以解决粘包为例,但不能解决半包问题,每次短链接发送的内容可能超过服务起缓冲区大小产生半包现象
 
 ```java
 public class HelloWorldClient {
