@@ -8,6 +8,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -18,9 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 public class Client {
 
     public static void main(String[] args) throws InterruptedException {
-        for (int i = 0; i < 10; i++) {
-            send();
-        }
+        //for (int i = 0; i < 10; i++) {
+        send();
+        //}
         log.info("finish");
     }
 
@@ -36,11 +37,16 @@ public class Client {
                             ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
                                 @Override
                                 public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                                    //粘包现象 客户端本意是十次消息十次发送 但在客户端是一次性接受
+                                    char c = '0';
+                                    Random r = new Random();
+                                    //十次全部放在一个bytebuf发送 因为有定长解码器 服务端也不会发生粘包问题
                                     ByteBuf buffer = ctx.alloc().buffer();
-                                    buffer.writeBytes(new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
+                                    for (int i = 0; i < 10; i++) {
+                                        byte[] contents = getContents(r.nextInt(8), (byte) c);
+                                        c++;
+                                        buffer.writeBytes(contents);
+                                    }
                                     ctx.writeAndFlush(buffer);
-                                    ctx.close();
                                 }
 
                             });
@@ -56,5 +62,20 @@ public class Client {
         } finally {
             work.shutdownGracefully();
         }
+    }
+
+    public static byte[] getContents(int length, byte b) {
+        if (length > 10) {
+            length = 10;
+        }
+        byte[] ret = new byte[10];
+        for (int i = 0; i < length; i++) {
+            ret[i] = b;
+        }
+
+        for (int i = length; i < 10; i++) {
+            ret[i] = '_';
+        }
+        return ret;
     }
 }
