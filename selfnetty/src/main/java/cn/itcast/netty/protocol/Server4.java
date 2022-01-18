@@ -27,7 +27,7 @@ public class Server4 {
                     @Override
                     protected void initChannel(NioSocketChannel ch) throws Exception {
                         //预设长度解码
-                        ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024, 0, 1, 0, 1));
+                        ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024,  0, 1, 0, 1));
                         ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
                         ch.pipeline().addLast(new ChannelInboundHandlerAdapter(){
                             //连接建立时触发
