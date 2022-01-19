@@ -22,7 +22,8 @@ public class TestRedisProtocol {
 
 
     public static void main(String[] args) {
-        final byte[] LINE = {13,10}; //回车 换行
+        //回车 换行
+        final byte[] LINE = {13,10};
         Bootstrap bootstrap = new Bootstrap();
         NioEventLoopGroup work = new NioEventLoopGroup();
         try {
