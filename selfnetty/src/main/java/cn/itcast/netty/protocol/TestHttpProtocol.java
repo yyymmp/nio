@@ -39,7 +39,7 @@ public class TestHttpProtocol {
                         @Override
                         protected void initChannel(NioSocketChannel ch) throws Exception {
                             ch.pipeline().addLast(new LoggingHandler());
-                            //http 解码器
+                            //http 编解码器 既是入站处理器也是出战处理器
                             ch.pipeline().addLast(new HttpServerCodec());
                             //出站处理器 向外部写出数据
                             ch.pipeline().addLast(new SimpleChannelInboundHandler<HttpRequest>(){
@@ -58,7 +58,7 @@ public class TestHttpProtocol {
                                     response.headers().setInt(CONTENT_LENGTH, bytes.length);
                                     response.content().writeBytes(bytes);
 
-                                    ctx.writeAndFlush(response);
+                                    ctx.writeAndFlush(response) ;
                                 }
                             });
 
