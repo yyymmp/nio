@@ -15,8 +15,13 @@ public class TestMessageCodec {
 
     public static void main(String[] args) throws Exception {
         EmbeddedChannel channel  = new EmbeddedChannel(
+                //LengthFieldBasedFrameDecoder:
+                //线程非安全 当多个eventloop使用同一个帧解码器时,如果其中一个收到一个半包 会保留
+                //此吃另一个eventloop也收到一个半包,此时可能会将各自的消息合成一个完整包
                 //配上帧解码器解决半包问题 确保解码时不会半包而转化错误   
                 new LengthFieldBasedFrameDecoder(1024,12,4,0,0),
+                //LoggingHandler:线程安全 因为没有状态变化 每个eventloop都可以使用 @Sharable
+                //在netty中被Sharable修饰,都可以被共享
                 new LoggingHandler(),
                 new MessageCodec()
         );
