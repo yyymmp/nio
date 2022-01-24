@@ -3,6 +3,7 @@ package cn.itcast.netty.client;
 import cn.itcast.netty.protocol.myprotocl.MessageCodecShare;
 import cn.itcast.netty.protocol.myprotocl.ProcotolFrameDecoder;
 import cn.itcast.netty.protocol.myprotocl.message.LoginRequestMessage;
+import cn.itcast.netty.protocol.myprotocl.message.LoginResponseMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -12,8 +13,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
-import java.io.IOException;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -21,10 +23,12 @@ public class ChatClient {
 
     public static void main(String[] args) {
         NioEventLoopGroup group = new NioEventLoopGroup();
+        CountDownLatch countDownLatch  = new CountDownLatch(1);
         try {
             Bootstrap bootstrap = new Bootstrap();
             LoggingHandler loggingHandler = new LoggingHandler();
             MessageCodecShare messageCodec = new MessageCodecShare();
+            AtomicBoolean atomicBoolean = new AtomicBoolean();
             bootstrap.channel(NioSocketChannel.class);
             bootstrap.group(group);
             bootstrap.handler(new ChannelInitializer<SocketChannel>() {
@@ -34,7 +38,7 @@ public class ChatClient {
                     //入站
                     ch.pipeline().addLast(new ProcotolFrameDecoder());
                     //入站+出战
-                    ch.pipeline().addLast(loggingHandler);
+                    //ch.pipeline().addLast(loggingHandler);
                     //入站+出战
                     ch.pipeline().addLast(messageCodec);
 
@@ -59,24 +63,59 @@ public class ChatClient {
                                 ctx.writeAndFlush(loginRequestMessage);
 
                                 System.out.println("等到进一步输入");
+
                                 try {
-                                    System.in.read();
-                                } catch (IOException ioException) {
-                                    ioException.printStackTrace();
+                                    //需要等待服务器返回进行下一步动作
+                                    countDownLatch.await();
+
+                                    if (!atomicBoolean.get()){
+                                        System.out.println("登录失败");
+                                        //关闭通道 触发关闭时间
+                                        ctx.channel().close();
+                                        return;
+                                    }
+
+                                    //登录成功
+                                    while (true) {
+                                        System.out.println("==================================");
+                                        System.out.println("send [username] [content]");
+                                        System.out.println("gsend [group name] [content]");
+                                        System.out.println("gcreate [group name] [m1,m2,m3...]");
+                                        System.out.println("gmembers [group name]");
+                                        System.out.println("gjoin [group name]");
+                                        System.out.println("gquit [group name]");
+                                        System.out.println("quit");
+                                        System.out.println("==================================");
+
+                                        String s = scanner.nextLine();
+
+                                    }
+
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
                                 }
+
                             },"system in").start();
                         }
 
                         /**
-                         * channelRead接受服务起返回
+                         * channelRead接受服务器返回
                          * @param ctx
                          * @param msg
                          * @throws Exception
                          */
                         @Override
                         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                            log.info("{}",msg);
-                            super.channelRead(ctx, msg);
+                            //如何将服务起返回的消息传入接受输入线程 很多方法 这里可以使用count
+                            if(msg instanceof LoginResponseMessage){
+                                LoginResponseMessage loginResponseMessage = (LoginResponseMessage) msg;
+                                if (loginResponseMessage.isSuccess()){
+                                    atomicBoolean.set(true);
+                                }else {
+                                    atomicBoolean.set(false);
+                                }
+                                countDownLatch.countDown();
+                            }
                         }
                     });
                 }
