@@ -2,7 +2,10 @@ package cn.itcast.netty.server;
 
 import cn.itcast.netty.protocol.myprotocl.MessageCodecShare;
 import cn.itcast.netty.protocol.myprotocl.ProcotolFrameDecoder;
+import cn.itcast.netty.server.handler.GroupChatRequestMessageHandler;
 import cn.itcast.netty.server.handler.GroupCreateRequestMessageHandler;
+import cn.itcast.netty.server.handler.GroupJoinRequestMessageHandler;
+import cn.itcast.netty.server.handler.GroupQuitRequestMessageHandler;
 import cn.itcast.netty.server.handler.LoginRequestMessageHandler;
 import cn.itcast.netty.server.handler.chatRequestMessageHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -27,6 +30,9 @@ public class ChatServer {
         LoginRequestMessageHandler loginRequestMessageHandler = new LoginRequestMessageHandler();
         chatRequestMessageHandler chatRequestMessageHandler = new chatRequestMessageHandler();
         GroupCreateRequestMessageHandler groupCreateRequestMessageHandler = new GroupCreateRequestMessageHandler();
+        GroupChatRequestMessageHandler groupChatRequestMessageHandler = new GroupChatRequestMessageHandler();
+        GroupJoinRequestMessageHandler groupJoinRequestMessageHandler = new GroupJoinRequestMessageHandler();
+        GroupQuitRequestMessageHandler groupQuitRequestMessageHandler = new GroupQuitRequestMessageHandler();
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.channel(NioServerSocketChannel.class);
@@ -42,6 +48,9 @@ public class ChatServer {
                     ch.pipeline().addLast(loginRequestMessageHandler);
                     ch.pipeline().addLast(chatRequestMessageHandler);
                     ch.pipeline().addLast(groupCreateRequestMessageHandler);
+                    ch.pipeline().addLast(groupChatRequestMessageHandler);
+                    ch.pipeline().addLast(groupJoinRequestMessageHandler);
+                    ch.pipeline().addLast(groupQuitRequestMessageHandler);
 
                 }
             });
