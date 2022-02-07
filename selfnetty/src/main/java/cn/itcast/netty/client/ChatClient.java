@@ -2,6 +2,12 @@ package cn.itcast.netty.client;
 
 import cn.itcast.netty.protocol.myprotocl.MessageCodecShare;
 import cn.itcast.netty.protocol.myprotocl.ProcotolFrameDecoder;
+import cn.itcast.netty.protocol.myprotocl.message.ChatRequestMessage;
+import cn.itcast.netty.protocol.myprotocl.message.GroupChatRequestMessage;
+import cn.itcast.netty.protocol.myprotocl.message.GroupCreateRequestMessage;
+import cn.itcast.netty.protocol.myprotocl.message.GroupJoinRequestMessage;
+import cn.itcast.netty.protocol.myprotocl.message.GroupMembersRequestMessage;
+import cn.itcast.netty.protocol.myprotocl.message.GroupQuitRequestMessage;
 import cn.itcast.netty.protocol.myprotocl.message.LoginRequestMessage;
 import cn.itcast.netty.protocol.myprotocl.message.LoginResponseMessage;
 import io.netty.bootstrap.Bootstrap;
@@ -13,7 +19,11 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
@@ -87,8 +97,44 @@ public class ChatClient {
                                         System.out.println("quit");
                                         System.out.println("==================================");
 
-                                        String s = scanner.nextLine();
+                                        String command = scanner.nextLine();
+                                        //单聊业务
+                                        String[] s = command.split(" ");
+                                        switch (s[0]){
+                                            //单聊业务
+                                            case "send":
+                                                ChatRequestMessage chatRequestMessage = new ChatRequestMessage(username,s[1],s[2]);
+                                                ctx.writeAndFlush(chatRequestMessage);
+                                                break;
+                                            case "gsend":
+                                                GroupChatRequestMessage groupChatRequestMessage = new GroupChatRequestMessage(username,s[1],s[2]);
+                                                ctx.writeAndFlush(groupChatRequestMessage);
+                                                break;
+                                            case "gcreate":
+                                                List<String> list = Arrays.asList(s[2].split(","));
+                                                Set<String> set =  new HashSet<>(list);
+                                                GroupCreateRequestMessage groupCreateRequestMessage = new GroupCreateRequestMessage(s[1],set);
+                                                ctx.writeAndFlush(groupCreateRequestMessage);
+                                                break;
+                                            case "gmembers":
+                                                GroupMembersRequestMessage groupMembersRequestMessage = new GroupMembersRequestMessage(s[1]);
+                                                ctx.writeAndFlush(groupMembersRequestMessage);
+                                                break;
+                                            case "gjoin":
+                                                GroupJoinRequestMessage groupJoinRequestMessage = new GroupJoinRequestMessage(username,s[1]);
+                                                ctx.writeAndFlush(groupJoinRequestMessage);
+                                                break;
+                                            case "gquit":
+                                                GroupQuitRequestMessage groupQuitRequestMessage = new GroupQuitRequestMessage(username,s[1]);
+                                                ctx.writeAndFlush(groupQuitRequestMessage);
+                                                break;
+                                            case "quit":
+                                                ctx.channel().close();
+                                                return;
+                                        }
+                                        if (command.startsWith("send")){
 
+                                        }
                                     }
 
                                 } catch (InterruptedException e) {
@@ -120,7 +166,7 @@ public class ChatClient {
                     });
                 }
             });
-            Channel channel = bootstrap.connect("localhost", 8080).sync().channel();
+            Channel channel = bootstrap.connect("localhost", 9001).sync().channel();
             channel.closeFuture().sync();
         } catch (Exception e) {
             log.error("client error", e);
