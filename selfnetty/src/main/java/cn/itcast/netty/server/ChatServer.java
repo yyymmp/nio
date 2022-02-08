@@ -7,6 +7,7 @@ import cn.itcast.netty.server.handler.GroupCreateRequestMessageHandler;
 import cn.itcast.netty.server.handler.GroupJoinRequestMessageHandler;
 import cn.itcast.netty.server.handler.GroupQuitRequestMessageHandler;
 import cn.itcast.netty.server.handler.LoginRequestMessageHandler;
+import cn.itcast.netty.server.handler.QuitHandler;
 import cn.itcast.netty.server.handler.chatRequestMessageHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -33,6 +34,7 @@ public class ChatServer {
         GroupChatRequestMessageHandler groupChatRequestMessageHandler = new GroupChatRequestMessageHandler();
         GroupJoinRequestMessageHandler groupJoinRequestMessageHandler = new GroupJoinRequestMessageHandler();
         GroupQuitRequestMessageHandler groupQuitRequestMessageHandler = new GroupQuitRequestMessageHandler();
+        QuitHandler quitHandler = new QuitHandler();
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.channel(NioServerSocketChannel.class);
