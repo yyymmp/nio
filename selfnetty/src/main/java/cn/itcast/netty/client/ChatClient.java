@@ -10,8 +10,10 @@ import cn.itcast.netty.protocol.myprotocl.message.GroupMembersRequestMessage;
 import cn.itcast.netty.protocol.myprotocl.message.GroupQuitRequestMessage;
 import cn.itcast.netty.protocol.myprotocl.message.LoginRequestMessage;
 import cn.itcast.netty.protocol.myprotocl.message.LoginResponseMessage;
+import cn.itcast.netty.protocol.myprotocl.message.PingMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
@@ -19,6 +21,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -52,6 +57,29 @@ public class ChatClient {
                     //入站+出战
                     ch.pipeline().addLast(messageCodec);
 
+                    //客户端一般设置写空闲事件  读空闲事件则关注则设为0
+                    ch.pipeline().addLast(new IdleStateHandler(0,3,0));
+
+                    ch.pipeline().addLast(new ChannelDuplexHandler(){
+                        /**
+                         * 自定义事件如何相应
+                         * 专门处理特殊事件
+                         * @param ctx
+                         * @param evt
+                         * @throws Exception
+                         */
+                        @Override
+                        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+                            IdleStateEvent evt1 = (IdleStateEvent) evt;
+                            //写空闲事件
+                            if (evt1.state() == IdleState.WRITER_IDLE) {
+                                log.info("3s 未写数据 发送心跳包");
+                                ctx.writeAndFlush(new PingMessage());
+                            }
+                        }
+                    });
+
+
                     //与业务相关的handler
                     //在连接建立后发送一个登录请求 可以添加一个handle
                     ch.pipeline().addLast("client handle",new ChannelInboundHandlerAdapter(){
@@ -64,9 +92,14 @@ public class ChatClient {
                                 Scanner scanner = new Scanner(System.in);
                                 System.out.println("请输入用户名");
                                 String username = scanner.nextLine();
+                                if(atomicBoolean.get()){
+                                    return;
+                                }
                                 System.out.println("请输入密码");
                                 String pwd = scanner.nextLine();
-
+                                if(atomicBoolean.get()){
+                                    return;
+                                }
                                 LoginRequestMessage loginRequestMessage = new LoginRequestMessage(username,pwd);
                                 //观察该消息是如何传播的 ,当前是一个入站处理器 ,写入了数据,就会经过出战处理器
                                 //依次经过messageCodec  loggingHandler head(内置)
@@ -154,7 +187,7 @@ public class ChatClient {
                          */
                         @Override
                         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                            //如何将服务起返回的消息传入接受输入线程 很多方法 这里可以使用count
+                            //如何将服务起返回的消息传入接受输入线程 很多方法 这里可以使用countDownLatch
                             if(msg instanceof LoginResponseMessage){
                                 LoginResponseMessage loginResponseMessage = (LoginResponseMessage) msg;
                                 if (loginResponseMessage.isSuccess()){
@@ -165,10 +198,25 @@ public class ChatClient {
                                 countDownLatch.countDown();
                             }
                         }
+
+                        //正常退出
+                        @Override
+                        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                            log.debug("连接已经断开，按任意键退出..");
+                            atomicBoolean.set(true);
+                        }
+
+                        //异常退出
+                        @Override
+                        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                            log.debug("连接已经断开，按任意键退出..");
+                            atomicBoolean.set(true);
+                        }
                     });
                 }
             });
             Channel channel = bootstrap.connect("localhost", 9001).sync().channel();
+            log.info("客户端已连接...");
             channel.closeFuture().sync();
         } catch (Exception e) {
             log.error("client error", e);
