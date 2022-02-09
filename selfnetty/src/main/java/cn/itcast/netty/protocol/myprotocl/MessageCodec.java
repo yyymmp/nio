@@ -1,5 +1,6 @@
 package cn.itcast.netty.protocol.myprotocl;
 
+import cn.itcast.netty.protocol.myprotocl.Serialize.Algorithm;
 import cn.itcast.netty.protocol.myprotocl.message.Message;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -49,8 +50,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         //消息内容
         in.readBytes(bytes, 0, length);
         //字节转对象
-        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
-        Message message = (Message) ois.readObject();
+        Message message = Algorithm.JAVA.deserialize(Message.class, bytes);
         log.debug("-----{}, {}, {}, {}, {}, {}", magicNum, version, serializerType, messageType, sequenceId, length);
         log.debug("-----{}", message);
         //解码后的消息
@@ -81,10 +81,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         //字节填充 一个字节 1
         out.writeByte(0xff);
         //对象转字节数组
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeObject(msg);
-        byte[] bytes = bos.toByteArray();
+        byte[] bytes = Algorithm.JAVA.serialize(msg);
         //长度  4
         out.writeInt(bytes.length);
         //内容 长度未定
