@@ -1,11 +1,16 @@
 package cn.itcast.netty.protocol.myprotocl;
 
 import cn.itcast.netty.protocol.myprotocl.message.Message;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author jlz
@@ -49,8 +54,22 @@ public interface Serialize {
                 } catch (IOException ioException) {
                     throw new RuntimeException("序列化失败");
                 }
+            }
+        },
+        JSON{
+            @Override
+            public <T> T deserialize(Class<T> clazz, byte[] bytes) {
+                //字节转字符串
+                String string = new String(bytes, StandardCharsets.UTF_8);
 
+                return new Gson().fromJson(string, clazz);
+            }
 
+            @Override
+            public <T> byte[] serialize(T obj) {
+                //将对象转正json
+                String json = new Gson().toJson(obj);
+                return json.getBytes(StandardCharsets.UTF_8);
             }
         }
     }

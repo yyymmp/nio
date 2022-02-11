@@ -1,5 +1,6 @@
 package cn.itcast.netty.protocol.myprotocl;
 
+import cn.itcast.netty.config.Config;
 import cn.itcast.netty.protocol.myprotocl.Serialize.Algorithm;
 import cn.itcast.netty.protocol.myprotocl.message.Message;
 import io.netty.buffer.ByteBuf;
@@ -50,7 +51,10 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         //消息内容
         in.readBytes(bytes, 0, length);
         //字节转对象
-        Message message = Algorithm.JAVA.deserialize(Message.class, bytes);
+        //根据消息类型找到对应的class 不能使用父类
+        Algorithm algorithm = Algorithm.values()[serializerType];
+        Class<? extends Message> messageClass = Message.getMessageClass(messageType);
+        Message message = algorithm.deserialize(messageClass, bytes);
         log.debug("-----{}, {}, {}, {}, {}, {}", magicNum, version, serializerType, messageType, sequenceId, length);
         log.debug("-----{}", message);
         //解码后的消息
@@ -73,7 +77,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         //协议版本 1
         out.writeByte(1);
         // 字节的序列化方式 jdk 0 , json 1 1
-        out.writeByte(0);
+        out.writeByte(Config.getSerializerAlgorithm().ordinal());
         //报文类型 1
         out.writeByte(msg.getMessageType());
         //顺序 1
@@ -81,7 +85,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         //字节填充 一个字节 1
         out.writeByte(0xff);
         //对象转字节数组
-        byte[] bytes = Algorithm.JAVA.serialize(msg);
+        byte[] bytes = Algorithm.values()[Config.getSerializerAlgorithm().ordinal()].serialize(msg);
         //长度  4
         out.writeInt(bytes.length);
         //内容 长度未定
