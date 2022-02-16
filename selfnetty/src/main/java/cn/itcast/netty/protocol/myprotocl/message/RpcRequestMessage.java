@@ -10,6 +10,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class RpcRequestMessage extends Message {
 
+    //调用方法时需要那些参数
     /**
      * 调用的接口全限定名，服务端根据它找到实现
      */

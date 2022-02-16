@@ -3,12 +3,20 @@ package cn.itcast.netty.protocol.myprotocl;
 import cn.itcast.netty.protocol.myprotocl.message.Message;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -59,18 +67,37 @@ public interface Serialize {
         JSON{
             @Override
             public <T> T deserialize(Class<T> clazz, byte[] bytes) {
-                //字节转字符串
-                String string = new String(bytes, StandardCharsets.UTF_8);
-
-                return new Gson().fromJson(string, clazz);
+                Gson gson = new GsonBuilder().registerTypeAdapter(Class.class, new ClassCodec()).create();
+                String json = new String(bytes, StandardCharsets.UTF_8);
+                return gson.fromJson(json, clazz);
             }
 
             @Override
             public <T> byte[] serialize(T obj) {
-                //将对象转正json
-                String json = new Gson().toJson(obj);
+                Gson gson = new GsonBuilder().registerTypeAdapter(Class.class, new ClassCodec()).create();
+                String json = gson.toJson(obj);
                 return json.getBytes(StandardCharsets.UTF_8);
+            }
+        };
+
+        class ClassCodec implements JsonSerializer<Class<?>>, JsonDeserializer<Class<?>> {
+
+            @Override
+            public Class<?> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                try {
+                    String str = json.getAsString();
+                    return Class.forName(str);
+                } catch (ClassNotFoundException e) {
+                    throw new JsonParseException(e);
+                }
+            }
+
+            @Override             //   String.class
+            public JsonElement serialize(Class<?> src, Type typeOfSrc, JsonSerializationContext context) {
+                // class -> json
+                return new JsonPrimitive(src.getName());
             }
         }
     }
+
 }

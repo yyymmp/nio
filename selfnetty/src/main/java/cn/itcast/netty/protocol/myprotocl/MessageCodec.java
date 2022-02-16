@@ -77,6 +77,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         //协议版本 1
         out.writeByte(1);
         // 字节的序列化方式 jdk 0 , json 1 1
+        log.error("序列化方式:{}", Algorithm.values()[Config.getSerializerAlgorithm().ordinal()]);
         out.writeByte(Config.getSerializerAlgorithm().ordinal());
         //报文类型 1
         out.writeByte(msg.getMessageType());
