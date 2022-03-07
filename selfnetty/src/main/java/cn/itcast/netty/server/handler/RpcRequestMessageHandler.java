@@ -21,6 +21,7 @@ public class RpcRequestMessageHandler extends SimpleChannelInboundHandler<RpcReq
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RpcRequestMessage message) throws Exception {
         RpcResponseMessage rpcResponseMessage = new RpcResponseMessage();
+        rpcResponseMessage.setSequenceId(message.getSequenceId());
         try {
             //服务端根据接口全限定类名找到在服务端的实现
             log.info("全限定类名{}",message.getInterfaceName());
@@ -33,7 +34,7 @@ public class RpcRequestMessageHandler extends SimpleChannelInboundHandler<RpcReq
             rpcResponseMessage.setReturnValue(invoke);
         }catch (Exception e){
             e.printStackTrace();
-            rpcResponseMessage.setExceptionValue(e);
+            rpcResponseMessage.setExceptionValue(new Exception("远程调用出错:"+e.getMessage()));
         }
 
         ctx.writeAndFlush(rpcResponseMessage);

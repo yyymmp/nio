@@ -7,8 +7,11 @@ import cn.itcast.netty.server.service.ServicesFactory;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.concurrent.Promise;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,11 +22,24 @@ import lombok.extern.slf4j.Slf4j;
 @Sharable
 public class RpcResponseMessageHandler extends SimpleChannelInboundHandler<RpcResponseMessage> {
 
+    public static final Map<Integer, Promise<Object>> promiseMap = new ConcurrentHashMap<>();
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RpcResponseMessage message) throws Exception {
+        //获取到空的promise
+        Promise<Object> promise = promiseMap.remove(message.getSequenceId());
+        //将响应结果放到promise中  在调用出就可以拿到该结果
+        if (promise != null){
+            if (message.getExceptionValue()!=null) {
+                //异常
+                promise.setFailure(message.getExceptionValue());
+            }else {
+                promise.setSuccess(message.getReturnValue());
+            }
+        }
 
-            log.info("客户端收到:{}",message);
     }
+
 
 
     public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
