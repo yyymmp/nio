@@ -26,6 +26,7 @@ public class RpcResponseMessageHandler extends SimpleChannelInboundHandler<RpcRe
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RpcResponseMessage message) throws Exception {
+        log.info("client: 收到RpcResponseMessage消息");
         //获取到空的promise
         Promise<Object> promise = promiseMap.remove(message.getSequenceId());
         //将响应结果放到promise中  在调用出就可以拿到该结果

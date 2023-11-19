@@ -166,6 +166,8 @@ public class ChatClient {
                                             case "quit":
                                                 ctx.channel().close();
                                                 return;
+                                            default:
+
                                         }
                                         if (command.startsWith("send")){
 

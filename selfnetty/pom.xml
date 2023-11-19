@@ -50,5 +50,10 @@
             <version>19.0.0</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-example</artifactId>
+            <version>4.1.39.Final</version>
+        </dependency>
     </dependencies>
 </project>

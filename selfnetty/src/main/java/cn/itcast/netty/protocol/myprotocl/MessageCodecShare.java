@@ -15,6 +15,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * 二次编解码   byteBuf <=> java obj
  * 必须要帧解码器一起使用 数据帧完整
  * @author jlz
  * @date 2022年01月22日 18:08

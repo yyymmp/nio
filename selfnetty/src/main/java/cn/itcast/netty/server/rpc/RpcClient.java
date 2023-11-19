@@ -5,11 +5,11 @@ import cn.itcast.netty.protocol.myprotocl.ProcotolFrameDecoder;
 import cn.itcast.netty.protocol.myprotocl.message.RpcRequestMessage;
 import cn.itcast.netty.server.handler.RpcResponseMessageHandler;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +25,7 @@ public class RpcClient {
         NioEventLoopGroup group = new NioEventLoopGroup();
         try {
 
-            LoggingHandler loggingHandler = new LoggingHandler();
+            LoggingHandler loggingHandler = new LoggingHandler(LogLevel.DEBUG);
             MessageCodecShare messageCodec = new MessageCodecShare();
             RpcResponseMessageHandler rpcResponseMessageHandler = new RpcResponseMessageHandler();
             bootstrap.channel(NioSocketChannel.class)
@@ -44,7 +44,8 @@ public class RpcClient {
 
             Channel channel = bootstrap.connect("localhost", 9001).sync().channel();
             log.info("客户端已连接...");
-            //调用一次远程接口
+            //channel.writeAndFlush(ByteBufAllocator.DEFAULT.buffer().writeBytes("wangwu".getBytes()));
+            //多消息粘包演示调用一次远程接口
             RpcRequestMessage message = new RpcRequestMessage(
                     1,
                     "cn.itcast.netty.server.service.HelloRpcService",
@@ -55,8 +56,12 @@ public class RpcClient {
                     //参数值
                     new Object[]{"李四"}
             );
-            channel.writeAndFlush(message);
+
+            for (int i = 0; i < 10; i++) {
+                channel.writeAndFlush(message);
+            }
             channel.closeFuture().sync();
+            //log.info("rpc请求已发出");
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
