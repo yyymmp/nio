@@ -6,7 +6,7 @@ non-blocking io 非阻塞 IO
 
 ### 1.1 Channel & Buffer
 
-channel 有一点类似于 stream，它就是读写数据的**双向通道**，可以从 channel 将数据读入 buffer，也可以将 buffer 的数据写入 channel，而之前的 stream 要么是输入，要么是输出，channel 比 stream 更为底层
+channel 有一点类似于 stream，它就是读写数据的 从 channel 将数据读入 buffer，也可以将 buffer 的数据写入 channel，而之前的 stream 要么是输入，要么是输出，channel 比 stream 更为底层,channel就是数据传输通道
 
 ```mermaid
 graph LR
@@ -16,10 +16,10 @@ buffer --> channel
 
 常见的 Channel 有
 
-* FileChannel
-* DatagramChannel
-* SocketChannel
-* ServerSocketChannel
+* FileChannel 文件数据传输通道
+* DatagramChannel  udps数据传输通道
+* SocketChannel  tcp数据传输通道
+* ServerSocketChannel tcp数据传输通道(仅用于tcp服务器)
 
 
 
