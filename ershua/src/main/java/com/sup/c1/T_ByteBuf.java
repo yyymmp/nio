@@ -17,7 +17,7 @@ public class T_ByteBuf {
         //获取fileChannel 通过输入输出流间接获取
         try (FileChannel channel = new FileInputStream("D:\\down_package\\maven_work\\nio\\data.txt").getChannel()) {
             while (true){
-                //构造一个缓冲区 且只有十个字节
+                //构造一个缓冲区 且只有十个字节 初始状态是写入模式
                 ByteBuffer byteBuffer = ByteBuffer.allocate(10);
                 //读取fileChannel, 往byteBuffer中写
                 int len = channel.read(byteBuffer);
