@@ -1,5 +1,6 @@
 package com.sup.c2;
 
+import static com.sup.c1.ByteBufferUtil.debugAll;
 import static com.sup.c1.ByteBufferUtil.debugRead;
 
 import java.io.IOException;
@@ -66,7 +67,9 @@ public class T_NioSelectorServer {
                     //配合select工作必须时非阻塞
                     sc.configureBlocking(false);
                     //sc也要注册到selector上  那么这个scKey就是负责这个SocketChannel的事件
-                    SelectionKey scKey = sc.register(selector, 0, null);
+                    ByteBuffer buffer= ByteBuffer.allocateDirect(16);
+                    //附件 将bytebuf作为附件关联到SelectionKey
+                    SelectionKey scKey = sc.register(selector, 0, buffer);
                     //指明关注的事件 对于SocketChannel 要么关注读或写
                     scKey.interestOps(SelectionKey.OP_READ);
                 }
@@ -75,20 +78,36 @@ public class T_NioSelectorServer {
                     //可读事件下 则此chanel是一个SocketChannel
                     try {
                         SocketChannel channel = (SocketChannel)key.channel();
-                        ByteBuffer buffer= ByteBuffer.allocateDirect(16);
+                        //若客户端发生数据超过该缓冲区 不会报错 会再次出发read事件 将剩余数据发送过来
+                        //所以需要在两处读事件发生时 获取完整数据
+                        //ByteBuffer buffer= ByteBuffer.allocateDirect(16);
+                        //当key发生事件时,获取key上的附件
+                        ByteBuffer buffer = (ByteBuffer)key.attachment();
                         int read = channel.read(buffer);
                         //客户端正常断开 也会出发一次read 与正常read不同的是 此时read返回-1
                         if (read == -1){
                             //客户端正常断开
                             key.cancel();
                         }else {
-                            buffer.flip();
-                            debugRead(buffer);
+                            split(buffer);
+
+                            if (buffer.limit() == buffer.position()){
+                                //说明需要扩容
+                                ByteBuffer newBuf = ByteBuffer.allocate(buffer.capacity() * 2);
+                                //旧内容拷贝
+                                buffer.flip();
+                                newBuf.put(buffer);
+                                //将newBuf作为新的附件替换掉之前的附件
+                                key.attach(newBuf);
+                            }
+                            //buffer.flip();
+                            //debugRead(buffer);
                         }
 
                     }catch (IOException e){
                         e.printStackTrace();
-                        //客户端被强制异常断开 需要将其管理员key cancel,(从selectedKeys中移除)否则read事件依然存在
+                        //客户端被强制异常断开 需要将其管理员key cancel
+                        // 会取消注册在 selector 上的 channel，并从 keys 集合中删除 key 后续不会再监听事件
                         key.cancel();
                     }
                 }
@@ -100,6 +119,28 @@ public class T_NioSelectorServer {
 
 
         }
+
+    }
+
+    private static void split(ByteBuffer byteBuffer) {
+        byteBuffer.flip();
+        for (int i = 0; i < byteBuffer.limit(); i++) {
+            if (byteBuffer.get(i) == '\n') {
+                //每次消息结尾的位置
+                int len = i + 1 - byteBuffer.position();
+                //使用一个新的bytebuf来接受
+                ByteBuffer tar = ByteBuffer.allocate(len);
+                for (int j = 0; j < len; j++) {
+                    tar.put(byteBuffer.get());
+                }
+                debugAll(tar);
+
+            }
+
+        }
+        //将已读去除
+        byteBuffer.compact();  //如果position和limit还是相同 则没有解析到一条完整消息
+
 
     }
 }
