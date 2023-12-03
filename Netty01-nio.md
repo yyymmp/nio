@@ -1105,6 +1105,8 @@ System.out.println("waiting...");
 
 #### 非阻塞
 
+对比阻塞模式只需要配置一个参数即可
+
 * 非阻塞模式下，相关方法都会不会让线程暂停
   * 在 ServerSocketChannel.accept 在没有连接建立时，会返回 null，继续运行
   * SocketChannel.read 在没有数据可读时，会返回 0，但线程不必阻塞，可以去执行其它 SocketChannel 的 read 或是去执行 ServerSocketChannel.accept 
