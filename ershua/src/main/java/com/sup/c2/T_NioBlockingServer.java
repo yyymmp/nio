@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * @date 2023年11月27日 22:35
  */
 @Slf4j
-public class T_NioServer {
+public class T_NioBlockingServer {
 
     //单线程模式处理阻塞模式  使用 nio 来理解阻塞模式, 单线程
     public static void main(String[] args) throws IOException {
