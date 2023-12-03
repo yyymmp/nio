@@ -73,11 +73,24 @@ public class T_NioSelectorServer {
                 //可读事件
                 else if (key.isReadable()){
                     //可读事件下 则此chanel是一个SocketChannel
-                    SocketChannel channel = (SocketChannel)key.channel();
-                    ByteBuffer buffer= ByteBuffer.allocateDirect(16);
-                    channel.read(buffer);
-                    buffer.flip();
-                    debugRead(buffer);
+                    try {
+                        SocketChannel channel = (SocketChannel)key.channel();
+                        ByteBuffer buffer= ByteBuffer.allocateDirect(16);
+                        int read = channel.read(buffer);
+                        //客户端正常断开 也会出发一次read 与正常read不同的是 此时read返回-1
+                        if (read == -1){
+                            //客户端正常断开
+                            key.cancel();
+                        }else {
+                            buffer.flip();
+                            debugRead(buffer);
+                        }
+
+                    }catch (IOException e){
+                        e.printStackTrace();
+                        //客户端被强制异常断开 需要将其管理员key cancel,(从selectedKeys中移除)否则read事件依然存在
+                        key.cancel();
+                    }
                 }
 
 
