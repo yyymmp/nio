@@ -23,7 +23,7 @@ public class T_NioClient {
         SocketChannel sc = SocketChannel.open();
         sc.connect(new InetSocketAddress("127.0.0.1",8089));
         //sc.write(Charset.defaultCharset().encode("hello\nworld\n"));
-        sc.write(Charset.defaultCharset().encode("123456789abcded333\n"));
+        sc.write(Charset.defaultCharset().encode("12345"));
         System.in.read();
 
 
