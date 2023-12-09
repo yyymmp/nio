@@ -23,8 +23,9 @@ public class T_ChannelFuyure {
 
     public static void main(String[] args) throws InterruptedException {
         //1 服务器启动器 组装netty组件 启动服务器
+        NioEventLoopGroup group = new NioEventLoopGroup();
         ChannelFuture channelFuture = new Bootstrap()
-                .group(new NioEventLoopGroup())
+                .group(group)
                 .channel(NioSocketChannel.class)
                 .handler(
                         //ChannelInitializer 初始化器 连接建立后会被调用 调用后执行initChannel
@@ -71,6 +72,7 @@ public class T_ChannelFuyure {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 log.error("链接关闭 进行操作");
+                group.shutdownGracefully();
             }
         });
     }
