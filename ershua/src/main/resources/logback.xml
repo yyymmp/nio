@@ -28,7 +28,7 @@
         <appender-ref ref="STDOUT"/>
     </logger>
 
-    <logger name="com.sup.nio.c1" level="DEBUG" additivity="false">
+    <logger name="io.netty.handler.logging.LoggingHandler" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 

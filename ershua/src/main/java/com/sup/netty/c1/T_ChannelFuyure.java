@@ -8,6 +8,8 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import java.net.InetSocketAddress;
 import java.util.Scanner;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * @date 2023年12月06日 22:36
  */
 @Slf4j
-public class T_EventLoopClient {
+public class T_ChannelFuyure {
 
     public static void main(String[] args) throws InterruptedException {
         //1 服务器启动器 组装netty组件 启动服务器
@@ -31,6 +33,7 @@ public class T_EventLoopClient {
                             //连接建立后被调用
                             @Override
                             protected void initChannel(NioSocketChannel ch) throws Exception {
+                                ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
                                 //编码器
                                 ch.pipeline().addLast(new StringEncoder());
                             }
@@ -41,19 +44,34 @@ public class T_EventLoopClient {
                 //2 当前线程不会阻塞 这叫非阻塞
                 .connect(new InetSocketAddress("127.0.0.1", 8089));
 
-        //channelFuture.sync();
-        //如果没有sync 此时连接还没建立
-        //1 使用sync方法同步处理结果 sync会阻塞当前线程直到连接建立成功
-        //2 使用addListen(回调对象) 异步处理结果 最后调用线程是nio线程
-        channelFuture.addListener(new ChannelFutureListener() {
+        channelFuture.sync();
+        Channel channel = channelFuture.channel();
+
+        new Thread(()->{
+            Scanner scanner = new Scanner(System.in);
+            while (true){
+                String s = scanner.nextLine();
+                if ("q".equals(s)){
+                    //close也是异步 是交给其他线程执行!!!
+                    //如何在关闭后执行一些操作
+                    channel.close();
+                    break;
+                }
+                channel.writeAndFlush(s);
+            }
+
+        },"input").start();
+
+        //对未来的关闭操作后做一些操作 必须确保该操作在关闭后进行
+        //1 使用同步 确定连接关闭closeFuture.sync
+        //2 使用异步
+        ChannelFuture closeFuture = channel.closeFuture();
+        closeFuture.addListener(new ChannelFutureListener() {
+            //关闭channel的线程来执行此操作
             @Override
-            //在nio线程中连接建立成功后, 会调用operationComplete
             public void operationComplete(ChannelFuture future) throws Exception {
-                Channel channel = future.channel();
-                log.error("channel:{}", channel);
-                channel.writeAndFlush("999");
+                log.error("链接关闭 进行操作");
             }
         });
-
     }
 }
