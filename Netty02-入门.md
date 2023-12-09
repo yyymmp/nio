@@ -417,14 +417,16 @@ new ServerBootstrap()
 
 关键代码 `io.netty.channel.AbstractChannelHandlerContext#invokeChannelRead()`
 
+ next.invokeChannelRead(m);:进入下一个handle方法  next就是下一个handler
+
 ```java
 static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
     final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
     // 下一个 handler 的事件循环是否与当前的事件循环是同一个线程
-    EventExecutor executor = next.executor();
+    EventExecutor executor = next.executor();  //返回下一个handle的eventloop 就是evevtloop 是继承关系
     
     // 是，直接调用
-    if (executor.inEventLoop()) {
+    if (executor.inEventLoop()) {  //当前handle的线程是否是executor(下一个handler)的线程是同一个线程
         next.invokeChannelRead(m);
     } 
     // 不是，将要执行的代码作为任务提交给下一个事件循环处理（换人）
