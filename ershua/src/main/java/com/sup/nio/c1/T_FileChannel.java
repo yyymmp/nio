@@ -1,4 +1,4 @@
-package com.sup.c1;
+package com.sup.nio.c1;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

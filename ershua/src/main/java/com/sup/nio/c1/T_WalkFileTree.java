@@ -1,6 +1,5 @@
-package com.sup.c1;
+package com.sup.nio.c1;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;

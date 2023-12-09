@@ -1,4 +1,4 @@
-package com.sup.c1;
+package com.sup.nio.c1;
 
 import static io.netty.util.internal.MathUtil.isOutOfBounds;
 import static io.netty.util.internal.StringUtil.NEWLINE;

@@ -1,6 +1,6 @@
-package com.sup.c2;
+package com.sup.nio.c2;
 
-import static com.sup.c1.ByteBufferUtil.debugRead;
+import static com.sup.nio.c1.ByteBufferUtil.debugRead;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

@@ -1,6 +1,6 @@
-package com.sup.c1;
+package com.sup.nio.c1;
 
-import static com.sup.c1.ByteBufferUtil.debugAll;
+import static com.sup.nio.c1.ByteBufferUtil.debugAll;
 
 import java.nio.ByteBuffer;
 
