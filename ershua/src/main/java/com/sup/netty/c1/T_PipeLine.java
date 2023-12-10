@@ -62,8 +62,11 @@ public class T_PipeLine {
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                                 log.error("3,{},{}",msg,msg.getClass());
                                 //写入操作触发出站处理器
-                                ch.write(ctx.alloc().buffer().writeBytes("hello".getBytes()));
+                                //ch.write(ctx.alloc().buffer().writeBytes("hello".getBytes()));
+                                //ctx.write不会从尾部开始向前找出战处理器 而是从当前位置向前找出战处理器
+                                ctx.write(ctx.alloc().buffer().writeBytes("hello".getBytes()));
                             };
+
                         });
                         //出战处理器 主要重写是write方法 对数据进行写出
                         pipeline.addLast("h4",new ChannelOutboundHandlerAdapter(){
