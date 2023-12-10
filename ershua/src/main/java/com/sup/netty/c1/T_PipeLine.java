@@ -1,7 +1,7 @@
 package com.sup.netty.c1;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
@@ -11,6 +11,9 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import java.nio.charset.Charset;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -39,19 +42,25 @@ public class T_PipeLine {
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                                 log.error("1");
-                                super.channelRead(ctx,msg);
+                                ByteBuf byteBuf = (ByteBuf) msg;
+                                String string = byteBuf.toString(Charset.defaultCharset());
+                                //将处理结果继续传递给下一个处理器
+                                super.channelRead(ctx,string);
                             };
                         }).addLast("h2",new ChannelInboundHandlerAdapter(){
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                                 log.error("2");
-                                super.channelRead(ctx,msg);
+                                String s = (String) msg;
+                                Stu stu = new Stu(s);
+                                //进一步加工 并传递给下一个handle
+                                super.channelRead(ctx,stu);
+
                             };
                         }).addLast("h3",new ChannelInboundHandlerAdapter(){
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                                log.error("3");
-                                super.channelRead(ctx,msg);
+                                log.error("3,{},{}",msg,msg.getClass());
                                 //写入操作触发出站处理器
                                 ch.write(ctx.alloc().buffer().writeBytes("hello".getBytes()));
                             };
@@ -86,4 +95,9 @@ public class T_PipeLine {
                 .bind(8089);
     }
 
+    @Data
+    @AllArgsConstructor
+    static class Stu{
+        private String name;
+    }
 }
