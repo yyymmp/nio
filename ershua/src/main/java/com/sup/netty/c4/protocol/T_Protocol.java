@@ -12,21 +12,24 @@ import io.netty.handler.logging.LoggingHandler;
  * @author jlz
  * @date 2023年12月14日 22:47
  */
-public class T_protocol {
+public class T_Protocol {
 
     public static void main(String[] args) throws Exception {
         EmbeddedChannel channel = new EmbeddedChannel(
+                //自定义协议配合LengthFieldBasedFrameDecoder实现粘包半包问题
+                //总共16字节 最后四位是长度  长度便宜是12
+                new LengthFieldBasedFrameDecoder(1024,12,4,0,0),
                 new LoggingHandler(),
-              new MessageCodec()
+                new MessageCodec()
         );
         //encode
-        LoginRequestMessage requestMessage = new LoginRequestMessage("zhangsan","123");
+        LoginRequestMessage requestMessage = new LoginRequestMessage("zhangsan", "123");
         channel.writeOutbound(requestMessage);
 
         //decode
         ByteBuf buffer = ByteBufAllocator.DEFAULT.buffer();
 
-        new MessageCodec().encode(null,requestMessage,buffer);
+        new MessageCodec().encode(null, requestMessage, buffer);
 
         channel.writeInbound(buffer);
     }

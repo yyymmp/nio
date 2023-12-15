@@ -40,7 +40,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         oos.writeObject(msg);
         byte[] bytes = bos.toByteArray();
         //长度 4字节
-        oos.writeInt(bytes.length);
+        out.writeInt(bytes.length);
         //内容
         out.writeBytes(bytes);
 
@@ -52,7 +52,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         //1 魔数 读取4字节
         int magicNum = in.readInt();
         //2 版本 读取1字节
-        byte b = in.readByte();
+        byte version = in.readByte();
         //3 序列化方式 1字节
         byte serType = in.readByte();
         //4 指令类型 1字节
@@ -65,14 +65,16 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         int len = in.readInt();
         byte[] bytes = new byte[len];
         //ByteBuf byteBuf = in.readBytes(len);
-        in.readBytes(bytes, 0, len);
+        ByteBuf byteBuf = in.readBytes(len);
+        byteBuf.readBytes(bytes);
+        //in.readBytes(bytes, 0, len);
         //if (serType == 0) {
         //反序列化内容
         ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(bytes));
         Message o = (Message) objectInputStream.readObject();
         //}
 
-        log.error("{},{},{},{},{}", magicNum, b, serType, messType, sequenceId);
+        log.error("{},{},{},{},{}", magicNum, version, serType, messType, sequenceId);
         log.error("{}", o);
 
         //给下一个handle使用
