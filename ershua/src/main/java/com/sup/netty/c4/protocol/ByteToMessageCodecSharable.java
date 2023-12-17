@@ -4,7 +4,7 @@ import com.sup.netty.c4.message.Message;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageCodec;
+import io.netty.handler.codec.MessageToMessageCodec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -14,15 +14,17 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author jlz
- * @date 2023年12月14日 22:19
+ * @date 2023年12月17日 14:06
  */
-@Slf4j
+//这个父类MessageToMessageCodec可以被共享 这里可以确认传递到这里的消息一定是一个完整消息
+//必须和LengthFieldBasedFrameDecoder一起使用保证消息完整 本处理器就不用记录状态从而并达到可共享
 @Sharable
-public class MessageCodec extends ByteToMessageCodec<Message> {
-
+@Slf4j
+public class ByteToMessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message> {
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, Message msg, List<Object> outList) throws Exception {
+        ByteBuf out = ctx.alloc().buffer();
         //出战编码
         //1 魔数 约定4字节1234
         out.writeBytes(new byte[]{1, 2, 3, 4});
@@ -46,6 +48,8 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         //内容
         out.writeBytes(bytes);
 
+        //传递给下一个处理器
+        outList.add(out);
     }
 
     @Override
