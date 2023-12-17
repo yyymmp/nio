@@ -15,11 +15,13 @@ import io.netty.handler.logging.LoggingHandler;
 public class T_Protocol {
 
     public static void main(String[] args) throws Exception {
+        //LoggingHandler可以共享 netty可以共享的handle都加了Sharable注解
+        LoggingHandler loggingHandler = new LoggingHandler();
         EmbeddedChannel channel = new EmbeddedChannel(
                 //自定义协议配合LengthFieldBasedFrameDecoder实现粘包半包问题
                 //总共16字节 最后四位是长度  长度便宜是12
-                //new LengthFieldBasedFrameDecoder(1024,12,4,0,0),
-                new LoggingHandler(),
+                new LengthFieldBasedFrameDecoder(1024,12,4,0,0),
+                loggingHandler,
                 new MessageCodec()
         );
         //encode
@@ -31,7 +33,7 @@ public class T_Protocol {
 
         new MessageCodec().encode(null, requestMessage, buffer);
         //模拟半包情况 若不加帧解码器 则会出现半包情况 导致协议解码报错
-        //加了帧解码器,如果出现半包 会等待数据继续发送
+        //加了帧解码器,如果出现半包 会等待数据继续发送 数据完成才会传递给下一个handle
         ByteBuf s1 = buffer.slice(0, 15);
         channel.writeInbound(s1);
         //channel.writeInbound(buffer);
