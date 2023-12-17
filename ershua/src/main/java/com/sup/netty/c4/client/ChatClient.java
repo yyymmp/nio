@@ -14,12 +14,16 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Scanner;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author jlz
  * @date 2023年12月06日 22:36
  */
+@Slf4j
 public class ChatClient {
 
     public static void main(String[] args) {
@@ -46,6 +50,38 @@ public class ChatClient {
                                             messageCodecSharable
 
                                     );
+                                    ch.pipeline().addLast("chient handle",new ChannelInboundHandlerAdapter(){
+                                        @Override
+                                        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                            log.error("{}",msg);
+                                        }
+
+                                        //连接建立时触发 进行登录
+                                        @Override
+                                        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                                            //负责接受控制台的输出 向服务器发送消息
+                                            new Thread(()->{
+                                                Scanner scanner = new Scanner(System.in);
+                                                System.out.println("请输入用户名");
+                                                String name = scanner.nextLine();
+                                                System.out.println("请输入密码");
+                                                String pwd = scanner.nextLine();
+                                                LoginRequestMessage requestMessage = new LoginRequestMessage(name, pwd);
+                                                //这在一个入站处理器 如果写入内容  就会触发出战操作 从当前handle向上找
+                                                ctx.writeAndFlush(requestMessage);
+
+                                                //保持控制台
+                                                try {
+                                                    System.in.read();
+                                                } catch (IOException ioException) {
+                                                    ioException.printStackTrace();
+                                                }
+                                            }).start();
+
+                                            //
+                                        }
+
+                                    });
                                 }
                             }
                     )
