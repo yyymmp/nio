@@ -1,6 +1,7 @@
 package com.sup.netty.c4.client;
 
 import com.sup.netty.c4.message.LoginRequestMessage;
+import com.sup.netty.c4.message.LoginResponseMessage;
 import com.sup.netty.c4.protocol.ByteToMessageCodecSharable;
 import com.sup.netty.c4.protocol.ProtocolFrameDecoder;
 import io.netty.bootstrap.Bootstrap;
@@ -17,6 +18,8 @@ import io.netty.handler.logging.LoggingHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -30,6 +33,8 @@ public class ChatClient {
         //1 服务器启动器 组装netty组件 启动服务器
         NioEventLoopGroup work = new NioEventLoopGroup();
         final ByteToMessageCodecSharable messageCodecSharable = new ByteToMessageCodecSharable();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicBoolean LOGIN = new AtomicBoolean(false);
         try {
             ChannelFuture channelFuture = new Bootstrap()
                     .group(work)
@@ -50,17 +55,26 @@ public class ChatClient {
                                             messageCodecSharable
 
                                     );
-                                    ch.pipeline().addLast("chient handle",new ChannelInboundHandlerAdapter(){
+                                    ch.pipeline().addLast("client handle", new ChannelInboundHandlerAdapter() {
                                         @Override
                                         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                                            log.error("{}",msg);
+                                            log.error("{}", msg);
+                                            if (msg instanceof LoginResponseMessage) {
+                                                LoginResponseMessage message = (LoginResponseMessage) msg;
+                                                if (message.isSuccess()) {
+                                                    //登录成功
+                                                    LOGIN.set(true);
+                                                }
+                                                //线程通信 唤醒
+                                                latch.countDown();
+                                            }
                                         }
 
                                         //连接建立时触发 进行登录
                                         @Override
                                         public void channelActive(ChannelHandlerContext ctx) throws Exception {
                                             //负责接受控制台的输出 向服务器发送消息
-                                            new Thread(()->{
+                                            new Thread(() -> {
                                                 Scanner scanner = new Scanner(System.in);
                                                 System.out.println("请输入用户名");
                                                 String name = scanner.nextLine();
@@ -69,13 +83,25 @@ public class ChatClient {
                                                 LoginRequestMessage requestMessage = new LoginRequestMessage(name, pwd);
                                                 //这在一个入站处理器 如果写入内容  就会触发出战操作 从当前handle向上找
                                                 ctx.writeAndFlush(requestMessage);
-
-                                                //保持控制台
+                                                System.out.println("......");
+                                                //线程等待 等到read事件中读到服务器返回
                                                 try {
-                                                    System.in.read();
-                                                } catch (IOException ioException) {
-                                                    ioException.printStackTrace();
+                                                    latch.await();
+                                                } catch (InterruptedException e) {
+                                                    e.printStackTrace();
                                                 }
+                                                //登录失败
+                                                if (!LOGIN.get()) {
+                                                    ctx.channel().close();
+                                                    return;
+                                                }
+                                                //登录成功 进入菜单
+                                                while (true){
+                                                    System.out.println("===============");
+                                                    System.out.println("send username content");
+                                                    System.out.println("===============");
+                                                }
+
                                             }).start();
 
                                             //
