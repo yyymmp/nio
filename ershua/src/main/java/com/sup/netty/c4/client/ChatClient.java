@@ -2,6 +2,7 @@ package com.sup.netty.c4.client;
 
 import com.sup.netty.c4.message.LoginRequestMessage;
 import com.sup.netty.c4.protocol.ByteToMessageCodecSharable;
+import com.sup.netty.c4.protocol.ProtocolFrameDecoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
@@ -36,21 +37,15 @@ public class ChatClient {
                                 //连接建立后被调用
                                 @Override
                                 protected void initChannel(NioSocketChannel ch) throws Exception {
-                                    ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
-                                    ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024, 12, 4, 0, 0));
-                                    ch.pipeline().addLast(messageCodecSharable);
-                                    ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
-                                        //channel 建立成功后触发
-                                        @Override
-                                        public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                                            LoginRequestMessage requestMessage = new LoginRequestMessage("zhangsan", "123");
-                                            ctx.writeAndFlush(requestMessage);
-                                            //ByteBuf buffer = ctx.alloc().buffer();
-                                            //buffer.writeBytes(new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-                                            //ctx.writeAndFlush(buffer);
-                                            //ctx.writeAndFlush(requestMessage);
-                                        }
-                                    });
+                                    ch.pipeline().addLast(
+                                            //log只做打印 可共享
+                                            new ProtocolFrameDecoder(),
+
+                                            new LoggingHandler(LogLevel.DEBUG),
+
+                                            messageCodecSharable
+
+                                    );
                                 }
                             }
                     )

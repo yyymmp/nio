@@ -2,6 +2,7 @@ package com.sup.netty.c4.server;
 
 import com.sup.netty.c4.protocol.ByteToMessageCodecSharable;
 import com.sup.netty.c4.protocol.MessageCodec;
+import com.sup.netty.c4.protocol.ProtocolFrameDecoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -35,8 +36,8 @@ public class ChatServer {
                         protected void initChannel(NioSocketChannel ch) throws Exception {
                             ch.pipeline().addLast(
                                     //log只做打印 可共享
+                                    new ProtocolFrameDecoder(),
                                     new LoggingHandler(LogLevel.DEBUG),
-                                    new LengthFieldBasedFrameDecoder(1024, 12, 4, 0, 0),
                                     //自定义handle是否可共享?  在这个边解码器中,没有记录数据 可被共享
                                     messageCodecSharable
                             );
