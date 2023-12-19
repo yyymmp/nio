@@ -1,24 +1,15 @@
 package com.sup.netty.c4.server;
 
-import com.sup.netty.c4.message.LoginRequestMessage;
-import com.sup.netty.c4.message.LoginResponseMessage;
 import com.sup.netty.c4.protocol.ByteToMessageCodecSharable;
-import com.sup.netty.c4.protocol.MessageCodec;
 import com.sup.netty.c4.protocol.ProtocolFrameDecoder;
-import com.sup.netty.c4.server.service.ServicesFactory;
-import com.sup.netty.c4.server.service.UserService;
-import com.sup.netty.c4.server.service.UserServiceMemoryImpl;
+import com.sup.netty.c4.server.handle.ChatRequestMessageHandle;
+import com.sup.netty.c4.server.handle.LoginRequestMessageHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.sctp.nio.NioSctpServerChannel;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +25,8 @@ public class ChatServer {
         NioEventLoopGroup boss = new NioEventLoopGroup();
         NioEventLoopGroup worker = new NioEventLoopGroup();
         LoggingHandler loggingHandler = new LoggingHandler(LogLevel.DEBUG);
+        ChatRequestMessageHandle chatRequestMessageHandle = new ChatRequestMessageHandle();
+        LoginRequestMessageHandler loginRequestMessageHandler = new LoginRequestMessageHandler();
         final ByteToMessageCodecSharable messageCodecSharable = new ByteToMessageCodecSharable();
         try {
 
@@ -52,25 +45,8 @@ public class ChatServer {
                             );
                             //这里可以使用SimpleChannelInboundHandler入站处理器 因为经过上面的解码器 到这里已经知道消息的具体类型
                             //只需要关注自己的消息即可
-                            ch.pipeline().addLast(new SimpleChannelInboundHandler<LoginRequestMessage>() {
-                                @Override
-                                protected void channelRead0(ChannelHandlerContext ctx, LoginRequestMessage msg) throws Exception {
-                                    String username = msg.getUsername();
-                                    String password = msg.getPassword();
-                                    UserService userService = new UserServiceMemoryImpl();
-                                    boolean login = userService.login(username, password);
-                                    LoginResponseMessage responseMessage;
-                                    if (login){
-                                        log.error("login success");
-                                         responseMessage = new LoginResponseMessage(true,"登录成功");
-
-                                    }else {
-                                        log.error("login fail");
-                                         responseMessage = new LoginResponseMessage(false,"登录失败");
-                                    }
-                                    ctx.writeAndFlush(responseMessage);
-                                }
-                            });
+                            ch.pipeline().addLast(loginRequestMessageHandler);
+                            ch.pipeline().addLast(chatRequestMessageHandle);
 
                         }
                     });
@@ -85,4 +61,5 @@ public class ChatServer {
 
 
     }
+
 }

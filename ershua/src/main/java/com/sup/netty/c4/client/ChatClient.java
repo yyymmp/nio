@@ -1,5 +1,11 @@
 package com.sup.netty.c4.client;
 
+import com.sup.netty.c4.message.ChatRequestMessage;
+import com.sup.netty.c4.message.GroupChatRequestMessage;
+import com.sup.netty.c4.message.GroupCreateRequestMessage;
+import com.sup.netty.c4.message.GroupJoinRequestMessage;
+import com.sup.netty.c4.message.GroupMembersRequestMessage;
+import com.sup.netty.c4.message.GroupQuitRequestMessage;
 import com.sup.netty.c4.message.LoginRequestMessage;
 import com.sup.netty.c4.message.LoginResponseMessage;
 import com.sup.netty.c4.protocol.ByteToMessageCodecSharable;
@@ -17,7 +23,11 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
@@ -96,10 +106,51 @@ public class ChatClient {
                                                     return;
                                                 }
                                                 //登录成功 进入菜单
-                                                while (true){
+                                                while (true) {
                                                     System.out.println("===============");
-                                                    System.out.println("send username content");
+                                                    System.out.println("send [username] [content]");
+                                                    System.out.println("gsend [group name] [content]");
+                                                    System.out.println("gcreate [group name] [m1,m2,m3]");
+                                                    System.out.println("gmembers [group name]");
+                                                    System.out.println("gjoin [group name]");
+                                                    System.out.println("gquit [group name]");
+                                                    System.out.println("quit");
+
                                                     System.out.println("===============");
+                                                    String command = scanner.nextLine();
+                                                    String[] s = command.split(" ");
+                                                    switch (s[0]) {
+                                                        case "send":
+                                                            ChatRequestMessage chatRequestMessage = new ChatRequestMessage(name, s[1], s[2]);
+                                                            ctx.writeAndFlush(chatRequestMessage);
+                                                            break;
+                                                        case "gsend":
+                                                            GroupChatRequestMessage groupChatRequestMessage = new GroupChatRequestMessage(name, s[1], s[2]);
+                                                            ctx.writeAndFlush(groupChatRequestMessage);
+                                                            break;
+                                                        case "gcreate":
+                                                            String[] split = s[2].split(",");
+                                                            List<String> list = Arrays.asList(split);
+                                                            Set<String> set = new HashSet<>(list);
+                                                            GroupCreateRequestMessage groupCreateRequestMessage = new GroupCreateRequestMessage(name, set);
+                                                            ctx.writeAndFlush(groupCreateRequestMessage);
+                                                            break;
+                                                        case "gmembers":
+                                                            GroupMembersRequestMessage groupMembersRequestMessage = new GroupMembersRequestMessage(s[1]);
+                                                            ctx.writeAndFlush(groupMembersRequestMessage);
+                                                            break;
+                                                        case "gjoin":
+                                                            GroupJoinRequestMessage groupJoinRequestMessage  = new GroupJoinRequestMessage(name, s[1]);
+                                                            ctx.writeAndFlush(groupJoinRequestMessage);
+                                                            break;
+                                                        case "gquit":
+                                                            GroupQuitRequestMessage groupQuitRequestMessage  = new GroupQuitRequestMessage(name, s[1]);
+                                                            ctx.writeAndFlush(groupQuitRequestMessage);
+                                                            break;
+                                                        case "quit":
+                                                            ctx.channel().close();
+                                                            break;
+                                                    }
                                                 }
 
                                             }).start();
