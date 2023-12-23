@@ -132,6 +132,8 @@ public class ChatClient {
                                                             String[] split = s[2].split(",");
                                                             List<String> list = Arrays.asList(split);
                                                             Set<String> set = new HashSet<>(list);
+                                                            set.add(name);
+                                                            log.error("建群人数:{}",set);
                                                             GroupCreateRequestMessage groupCreateRequestMessage = new GroupCreateRequestMessage(s[1], set);
                                                             ctx.writeAndFlush(groupCreateRequestMessage);
                                                             break;

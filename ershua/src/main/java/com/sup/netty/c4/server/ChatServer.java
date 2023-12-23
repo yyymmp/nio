@@ -3,6 +3,7 @@ package com.sup.netty.c4.server;
 import com.sup.netty.c4.protocol.ByteToMessageCodecSharable;
 import com.sup.netty.c4.protocol.ProtocolFrameDecoder;
 import com.sup.netty.c4.server.handle.ChatRequestMessageHandle;
+import com.sup.netty.c4.server.handle.GroupChatRequestHandle;
 import com.sup.netty.c4.server.handle.GroupCreateRequestMessageHandle;
 import com.sup.netty.c4.server.handle.LoginRequestMessageHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -30,6 +31,7 @@ public class ChatServer {
         LoginRequestMessageHandler loginRequestMessageHandler = new LoginRequestMessageHandler();
         final ByteToMessageCodecSharable messageCodecSharable = new ByteToMessageCodecSharable();
         GroupCreateRequestMessageHandle groupCreateRequestMessageHandle = new GroupCreateRequestMessageHandle();
+        GroupChatRequestHandle groupChatRequestHandle = new GroupChatRequestHandle();
         try {
 
             ServerBootstrap bootstrap = new ServerBootstrap()
@@ -50,6 +52,7 @@ public class ChatServer {
                             ch.pipeline().addLast(loginRequestMessageHandler);
                             ch.pipeline().addLast(chatRequestMessageHandle);
                             ch.pipeline().addLast(groupCreateRequestMessageHandle);
+                            ch.pipeline().addLast(groupChatRequestHandle);
 
                         }
                     });
