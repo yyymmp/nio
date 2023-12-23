@@ -151,7 +151,7 @@ public class ChatClient {
                                                             break;
                                                         case "quit":
                                                             ctx.channel().close();
-                                                            break;
+                                                            return;
                                                     }
                                                 }
 
