@@ -132,7 +132,7 @@ public class ChatClient {
                                                             String[] split = s[2].split(",");
                                                             List<String> list = Arrays.asList(split);
                                                             Set<String> set = new HashSet<>(list);
-                                                            GroupCreateRequestMessage groupCreateRequestMessage = new GroupCreateRequestMessage(name, set);
+                                                            GroupCreateRequestMessage groupCreateRequestMessage = new GroupCreateRequestMessage(s[1], set);
                                                             ctx.writeAndFlush(groupCreateRequestMessage);
                                                             break;
                                                         case "gmembers":

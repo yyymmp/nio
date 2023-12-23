@@ -3,6 +3,7 @@ package com.sup.netty.c4.server;
 import com.sup.netty.c4.protocol.ByteToMessageCodecSharable;
 import com.sup.netty.c4.protocol.ProtocolFrameDecoder;
 import com.sup.netty.c4.server.handle.ChatRequestMessageHandle;
+import com.sup.netty.c4.server.handle.GroupCreateRequestMessageHandle;
 import com.sup.netty.c4.server.handle.LoginRequestMessageHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -28,6 +29,7 @@ public class ChatServer {
         ChatRequestMessageHandle chatRequestMessageHandle = new ChatRequestMessageHandle();
         LoginRequestMessageHandler loginRequestMessageHandler = new LoginRequestMessageHandler();
         final ByteToMessageCodecSharable messageCodecSharable = new ByteToMessageCodecSharable();
+        GroupCreateRequestMessageHandle groupCreateRequestMessageHandle = new GroupCreateRequestMessageHandle();
         try {
 
             ServerBootstrap bootstrap = new ServerBootstrap()
@@ -47,6 +49,7 @@ public class ChatServer {
                             //只需要关注自己的消息即可
                             ch.pipeline().addLast(loginRequestMessageHandler);
                             ch.pipeline().addLast(chatRequestMessageHandle);
+                            ch.pipeline().addLast(groupCreateRequestMessageHandle);
 
                         }
                     });
