@@ -11,6 +11,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -50,9 +51,9 @@ public class ChatServer {
                             ch.pipeline().addLast(
                                     //log只做打印 可共享
                                     new ProtocolFrameDecoder(),
-                                    new LoggingHandler(LogLevel.DEBUG),
                                     //自定义handle是否可共享?  在这个边解码器中,没有记录数据 可被共享
                                     messageCodecSharable,
+                                    loggingHandler,
                                     //连接假死检测
                                     //参数1:读空闲 写空闲,如果不关心 则设为0
                                     //参数2 写空闲 参数3 读或写
@@ -70,6 +71,7 @@ public class ChatServer {
                                             }
                                         }
                                     }
+
                             );
                             //这里可以使用SimpleChannelInboundHandler入站处理器 因为经过上面的解码器 到这里已经知道消息的具体类型
                             //只需要关注自己的消息即可

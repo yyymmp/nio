@@ -65,7 +65,6 @@ public class ChatClient {
                                             //log只做打印 可共享
                                             new ProtocolFrameDecoder(),
 
-                                            //new LoggingHandler(LogLevel.DEBUG),
 
                                             messageCodecSharable,
                                             //客户端一般判断写空闲 判断客户端多久没向服务端写数据 触发写空闲事件

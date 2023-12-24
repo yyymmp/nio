@@ -1,6 +1,8 @@
 package com.sup.netty.c4.protocol;
 
+import com.sup.netty.c4.config.Config;
 import com.sup.netty.c4.message.Message;
+import com.sup.netty.c4.protocol.Serializer.Algorithm;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -31,7 +33,7 @@ public class ByteToMessageCodecSharable extends MessageToMessageCodec<ByteBuf, M
         //2 版本 1字节
         out.writeByte(1);
         //3 序列化算法 0 =>jdk方式 1=>json方式  1字节
-        out.writeByte(0);
+        out.writeByte(Config.getSerializerAlgorithm().ordinal());
         //4 指令类型 运行时子类对象实现父类方法获取 1字节
         out.writeByte(msg.getMessageType());
         //5 请求序号  4字节
@@ -39,14 +41,11 @@ public class ByteToMessageCodecSharable extends MessageToMessageCodec<ByteBuf, M
         //对其字节  无意义 1字节
         out.writeByte(0xff);
         //6 长度与内容  消息体在msg对象中 需要将对象转为字节数组
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeObject(msg);
-        byte[] bytes = bos.toByteArray();
+        byte[] bytes1 = Config.getSerializerAlgorithm().serialize(msg);
         //长度 4字节
-        out.writeInt(bytes.length);
+        out.writeInt(bytes1.length);
         //内容
-        out.writeBytes(bytes);
+        out.writeBytes(bytes1);
 
         //传递给下一个处理器
         outList.add(out);
@@ -74,16 +73,15 @@ public class ByteToMessageCodecSharable extends MessageToMessageCodec<ByteBuf, M
         ByteBuf byteBuf = in.readBytes(len);
         byteBuf.readBytes(bytes);
         //in.readBytes(bytes, 0, len);
-        //if (serType == 0) {
         //反序列化内容
-        ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(bytes));
-        Message o = (Message) objectInputStream.readObject();
-        //}
+        Algorithm algorithm = Algorithm.values()[serType];
+        //这里需要具体的消息类型 因为提前做了映射关系 因为如果是json序列化方式
+        Message message = algorithm.deserialize(Message.getMessageClass(messType), bytes);
 
         log.error("{},{},{},{},{}", magicNum, version, serType, messType, sequenceId);
-        log.error("{}", o);
+        log.error("{}", message);
 
         //给下一个handle使用
-        out.add(o);
+        out.add(message);
     }
 }
