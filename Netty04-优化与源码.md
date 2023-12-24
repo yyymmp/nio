@@ -260,7 +260,7 @@ public abstract class Message implements Serializable {
 * 属于 SocketChannal 参数
 * 用在客户端建立连接时，如果在指定毫秒内无法连接，会抛出 timeout 异常,只用在客户端
 
-* SO_TIMEOUT 主 
+* SO_TIMEOUT 主 要用在阻塞io中,因阻塞io都是无线等待的
 
 ```java
 @Slf4j
