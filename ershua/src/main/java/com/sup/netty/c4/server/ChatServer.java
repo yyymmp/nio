@@ -48,6 +48,11 @@ public class ChatServer {
                         @Override
                         protected void initChannel(NioSocketChannel ch) throws Exception {
                             ch.pipeline().addLast(
+                                    //log只做打印 可共享
+                                    new ProtocolFrameDecoder(),
+                                    new LoggingHandler(LogLevel.DEBUG),
+                                    //自定义handle是否可共享?  在这个边解码器中,没有记录数据 可被共享
+                                    messageCodecSharable,
                                     //连接假死检测
                                     //参数1:读空闲 写空闲,如果不关心 则设为0
                                     //参数2 写空闲 参数3 读或写
@@ -64,13 +69,7 @@ public class ChatServer {
                                                 log.error("读空闲已经5s未读到数据");
                                             }
                                         }
-                                    },
-
-                                    //log只做打印 可共享
-                                    new ProtocolFrameDecoder(),
-                                    new LoggingHandler(LogLevel.DEBUG),
-                                    //自定义handle是否可共享?  在这个边解码器中,没有记录数据 可被共享
-                                    messageCodecSharable
+                                    }
                             );
                             //这里可以使用SimpleChannelInboundHandler入站处理器 因为经过上面的解码器 到这里已经知道消息的具体类型
                             //只需要关注自己的消息即可

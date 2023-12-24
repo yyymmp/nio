@@ -8,10 +8,12 @@ import com.sup.netty.c4.message.GroupMembersRequestMessage;
 import com.sup.netty.c4.message.GroupQuitRequestMessage;
 import com.sup.netty.c4.message.LoginRequestMessage;
 import com.sup.netty.c4.message.LoginResponseMessage;
+import com.sup.netty.c4.message.PingMessage;
 import com.sup.netty.c4.protocol.ByteToMessageCodecSharable;
 import com.sup.netty.c4.protocol.ProtocolFrameDecoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -21,6 +23,9 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -60,9 +65,24 @@ public class ChatClient {
                                             //log只做打印 可共享
                                             new ProtocolFrameDecoder(),
 
-                                            new LoggingHandler(LogLevel.DEBUG),
+                                            //new LoggingHandler(LogLevel.DEBUG),
 
-                                            messageCodecSharable
+                                            messageCodecSharable,
+                                            //客户端一般判断写空闲 判断客户端多久没向服务端写数据 触发写空闲事件
+                                            new IdleStateHandler(0,3,0),
+                                            new ChannelDuplexHandler(){
+                                                //专门响应特殊事件如读空闲事件IdleState#readIdle
+                                                @Override
+                                                public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+                                                    IdleStateEvent event = (IdleStateEvent) evt;
+                                                    //触发写空闲事件
+                                                    if (event.state() == IdleState.WRITER_IDLE) {
+                                                        //log.error("3s未写数据 发送心跳包");
+                                                        PingMessage pingMessage = new PingMessage();
+                                                        ctx.writeAndFlush(pingMessage);
+                                                    }
+                                                }
+                                            }
 
                                     );
                                     ch.pipeline().addLast("client handle", new ChannelInboundHandlerAdapter() {
@@ -78,6 +98,24 @@ public class ChatClient {
                                                 //线程通信 唤醒
                                                 latch.countDown();
                                             }
+                                        }
+
+                                        /**
+                                         * 连接断开时触发
+                                         * @param ctx
+                                         * @throws Exception
+                                         */
+                                        @Override
+                                        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                            System.out.println("连接已关闭");
+                                            ctx.channel().close();
+                                        }
+
+                                        //连接异常
+                                        @Override
+                                        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                                            System.out.println("连接已关闭");
+                                            ctx.channel().close();
                                         }
 
                                         //连接建立时触发 进行登录
