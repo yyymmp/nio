@@ -459,7 +459,7 @@ java.net.SocketTimeoutException: connect timed out
 #### 6）ALLOCATOR
 
 * 属于 SocketChannal 参数
-* 用来分配 ByteBuf， ctx.alloc()
+* 用来分配 ByteBuf， ctx.alloc()   用来配置分配的bytebuf的类型
 
 
 
