@@ -12,6 +12,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.concurrent.DefaultPromise;
 import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
@@ -50,9 +51,10 @@ public class RpcClientManager {
      */
     public static <T> T getProxyService(Class<T> serviceClass){
         Class<?>[] interfaces = new Class[]{serviceClass};
+        int sequenceId = SequenceIdGenerator.nextId();
         Object proxyInstance = Proxy.newProxyInstance(serviceClass.getClassLoader(), interfaces, ((proxy, method, args) -> {
             //1 将方法调用转为消息对象
-            RpcRequestMessage rpcRequessage = new RpcRequestMessage(SequenceIdGenerator.nextId(),
+            RpcRequestMessage rpcRequessage = new RpcRequestMessage(sequenceId,
                     serviceClass.getName()
                     , method.getName()
                     , method.getReturnType()
@@ -60,8 +62,17 @@ public class RpcClientManager {
                     , args);
             //2 将消息对象发出去
             getChannel().writeAndFlush(rpcRequessage);
-            //3
-            return null;
+            //3 准备一个promise接受结果                        //指定了promise对象接受结果的线程
+            DefaultPromise<Object> promise = new DefaultPromise<>(getChannel().eventLoop());
+            RpcResponseHandle.promiseMap.put(sequenceId,promise);
+            //4 等待promise结果
+            promise.await();
+            //调用正常
+            if (promise.isSuccess()){
+                return promise.getNow();
+            }else {
+                throw new RuntimeException(promise.cause());
+            }
         }
         ));
 
@@ -80,7 +91,8 @@ public class RpcClientManager {
         //getChannel().writeAndFlush(rpcRequestMessage);
         //System.in.read();
         HelloService proxyService = getProxyService(HelloService.class);
-        proxyService.sayHello("lisi");
+        System.out.println(proxyService.sayHello("lisi"));
+        System.out.println(proxyService.sayHello("jializhong"));
     }
 
     public static void initChannel() {
