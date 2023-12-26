@@ -34,8 +34,8 @@ public class RpcServer {
                         @Override
                         protected void initChannel(NioSocketChannel ch) throws Exception {
                             ch.pipeline().addLast(
-                                    new ProtocolFrameDecoder(),
                                     loggingHandler,
+                                    new ProtocolFrameDecoder(),
                                     messageCodecSharable,
                                     rpcRequestHandle
                             );
