@@ -91,7 +91,7 @@ public class RpcClientManager {
         //getChannel().writeAndFlush(rpcRequestMessage);
         //System.in.read();
         HelloService proxyService = getProxyService(HelloService.class);
-        System.out.println(proxyService.sayHello("lisi"));
+        //System.out.println(proxyService.sayHello("lisi"));
         System.out.println(proxyService.sayHello("jializhong"));
     }
 

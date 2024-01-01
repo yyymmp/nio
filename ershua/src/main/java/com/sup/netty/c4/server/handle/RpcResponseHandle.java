@@ -22,7 +22,7 @@ public class RpcResponseHandle extends SimpleChannelInboundHandler<RpcResponseMe
     protected void channelRead0(ChannelHandlerContext ctx, RpcResponseMessage msg) throws Exception {
         log.error("{}", msg);
         int sequenceId = msg.getSequenceId();
-        Promise<Object> promise = promiseMap.get(sequenceId);
+        Promise<Object> promise = promiseMap.remove(sequenceId);
         if (promise != null){
             Object returnValue = msg.getReturnValue();
             Exception exceptionValue = msg.getExceptionValue();
